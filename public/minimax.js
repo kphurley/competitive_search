@@ -17,14 +17,14 @@
 
 	Input: A state, representing the Connect 4 board.
 
-    Output: Returns an integer indicating the column 
+    Output: Returns an integer indicating the column
     where the piece will be dropped.
 
 	This is the only function called when
 	you are playing against your agent.
 
 	*/
-	
+
 	var makeMove = function(state){
 
 
@@ -35,7 +35,7 @@
 		var allLegalMoves = state.legalMoves();
 		// state.legalMoves returns an array of integer values,
 		// which indicate the locations (0 through 6)
-		// where one can currently legally drop 
+		// where one can currently legally drop
 		// a connect four piece.  (Obviously, if a column
 		// is full, it will not return the index of that
 		// column.)
@@ -44,11 +44,11 @@
 		// To get a successor state following a move,
 		// just call state.move(someMove).  This returns
 		// the board state after that move has been made.
-		// It autmatically switches the player whose 
+		// It autmatically switches the player whose
 		// move it is, and so on and so forth
 		//
 		// Note that state is immutable; invoking state.move
-		// does NOT change the original state, but 
+		// does NOT change the original state, but
 		// returns a new one.
 
 		var depth = 3
@@ -61,7 +61,7 @@
 		// The function max(arr, func) returns the element
 		// from the array which gives the highest value
 		// according to the function passed into it.
-		// 
+		//
 		// So this function looks
 	}
 
@@ -77,25 +77,25 @@
 	The function "heuristic" is one you must (mostly)
 	write
 
-	Input: state, maximizingPlayer.  The state will be 
+	Input: state, maximizingPlayer.  The state will be
 	a state object.  The maximizingPlayer will be either
-	an 'x' or an 'o', and is the player whose advantage 
+	an 'x' or an 'o', and is the player whose advantage
 	is signified by positive numbers.
-	
+
 	Output: A number evaluating how good the state is from
 	the perspective of the player who is maximizing.
-	
+
 	A useful method on state here would be state.numLines.
 	This function takes an integer and a player
-	like this "state.numLines(2,'x')" and returns the 
+	like this "state.numLines(2,'x')" and returns the
 	number of lines of that length which that player
 	has.  That is, it returns the number of contiguous linear
 	pieces of that length that that player has.
 
-	This is useful because, generally speaking, it is better 
+	This is useful because, generally speaking, it is better
 	to have lots of lines that fewer lines, and much better
 	to have longer lines than shorter lines.
-	
+
 	You'll need to pass the tests defined in minimax_specs.js.
 	*/
 	var heuristic = function(state, maximizingPlayer){
@@ -103,11 +103,25 @@
 		var minimizingPlayer = (maximizingPlayer == 'x') ? 'o' : 'x';
 		//This is how you can retrieve the minimizing player.
 
-        var linesOfLengthTwoForX = state.numLines(2, 'x')
-        //An example 
+		//if(state.numLines(4, 'x')) return 1000;
+		//if(state.numLines(4, 'o')) return -1000;
+
+		var linesOfLengthThreeForX = state.numLines(3, 'x');
+    var linesOfLengthThreeForO = state.numLines(3, 'o');
+
+    var threeLineValue = (maximizingPlayer == 'x') ?
+    	2*(linesOfLengthThreeForX - linesOfLengthThreeForO) :
+    	2*(linesOfLengthThreeForO - linesOfLengthThreeForX);
+
+    var linesOfLengthTwoForX = state.numLines(2, 'x');
+    var linesOfLengthTwoForO = state.numLines(2, 'o');
+
+    var twoLineValue = (maximizingPlayer == 'x') ?
+    	linesOfLengthTwoForX - linesOfLengthTwoForO :
+    	linesOfLengthTwoForO - linesOfLengthTwoForX;
 
         //Your code here.  Don't return random, obviously.
-		return Math.random()
+		return threeLineValue + twoLineValue;
 	}
 
 
@@ -115,18 +129,18 @@
 	/*
     The function "minimax" is one you must write.
 
-    Input: state, depth, maximizingPlayer.  The state is 
-    an instance of a state object.  The depth is an integer 
+    Input: state, depth, maximizingPlayer.  The state is
+    an instance of a state object.  The depth is an integer
     greater than zero; when it is zero, the minimax function
-    should return the value of the heuristic function.  
-    
+    should return the value of the heuristic function.
+
     Output: Returns a number evaluating the state, just
     like heuristic does.
-	
-	You'll need to use state.nextStates(), which returns 
+
+	You'll need to use state.nextStates(), which returns
 	a list of possible successor states to the state passed in
 	as an argument.
-	
+
 	You'll also probably need to use state.nextMovePlayer,
 	which returns whether the next moving player is 'x' or 'o',
 	to see if you are maximizing or minimizing.
@@ -135,11 +149,25 @@
 	know, I believe.
 	*/
 	var minimax = function(state, depth, maximizingPlayer){
+		console.log('who is being called on minimax', maximizingPlayer);
 		var minimizingPlayer = (state.maximizingPlayer == 'x') ? 'o' : 'x';
-		var possibleStates = state.nextStates();
+		var possibleStates;
+
+		console.log('state', state);
+		if(state == 0) return 0;
+
+		possibleStates = state.nextStates();
 		var currentPlayer = state.nextMovePlayer;
 		//Your code here.
-		return Math.random();
+		if(depth === 0 || possibleStates.length === 0){
+			return heuristic(state, maximizingPlayer);
+		}
+		else{
+			for(_state in possibleStates){
+				return minimax(_state, depth-1, currentPlayer);
+			}
+		}
+
 	}
 
 
@@ -149,17 +177,17 @@
 
 	   It is called with the same values with which minimax itself is called.*/
 	var minimaxAlphaBetaWrapper = function(state, depth, maximizingPlayer){
-		
+
 	    /*
 	    You will need to write minimaxAB for the extra credit.
 	    Input: state and depth are as they are before.  (Maximizing player
 	    is closed over from the parent function.)
 
 	    Alpha is the BEST value currently guaranteed to the maximizing
-	    player, if they play well, no matter what the minimizing player 
+	    player, if they play well, no matter what the minimizing player
 	    does; this is why it is a very low number to start with.
 
-	    Beta is the BEST value currently guaranteed to the minimizing 
+	    Beta is the BEST value currently guaranteed to the minimizing
 	    player, if they play well, no matter what the maximizing player
 	    does; this is why it is a very high value to start with.
 		*/
@@ -167,7 +195,7 @@
 		}
 
 		return minimaxAB(state, depth, -100000,100000)
-	}	
+	}
 
 
 
